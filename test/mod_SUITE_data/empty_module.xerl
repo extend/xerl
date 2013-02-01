@@ -1,0 +1,3 @@
+mod empty_module
+begin
+end
