@@ -21,12 +21,16 @@ compile(Filename) ->
 	{ok, Src} = file:read_file(Filename),
 	{ok, Tokens, _} = xerl_lexer:string(binary_to_list(Src)),
 	{ok, Exprs} = xerl_parser:parse(Tokens),
-	{mod, _, {atom, _, Module}, _} = lists:keyfind(mod, 1, Exprs),
-	{ok, [Core]} = xerl_codegen:exprs(Exprs),
-	{ok, [{empty_module, []}]} = core_lint:module(Core),
+	execute(Filename, Exprs, []).
+
+execute(_, [], Modules) ->
+	io:format("Done...~n"),
+	{ok, lists:reverse(Modules)};
+execute(Filename, [Expr = {mod, _, {atom, _, Name}, []}|Tail], Modules) ->
+	{ok, [Core]} = xerl_codegen:exprs([Expr]),
+	{ok, [{Name, []}]} = core_lint:module(Core),
 	io:format("~s~n", [core_pp:format(Core)]),
 	{ok, _, Beam} = compile:forms(Core,
 		[binary, from_core, return_errors, {source, Filename}]),
-	{module, Module} = code:load_binary(Module, Filename, Beam),
-	io:format("Done...~n"),
-	{ok, Module}.
+	{module, Name} = code:load_binary(Name, Filename, Beam),
+	execute(Filename, Tail, [Name|Modules]).

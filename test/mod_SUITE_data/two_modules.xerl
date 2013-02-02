@@ -1,0 +1,7 @@
+mod first_module
+begin
+end
+
+mod second_module
+begin
+end
