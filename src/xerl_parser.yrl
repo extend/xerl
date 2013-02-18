@@ -20,12 +20,14 @@ exprs expr module.
 Terminals
 atom integer
 
-'begin' 'end' 'mod'.
+'begin' 'end' 'mod'
+','.
 
 Rootsymbol exprs.
 
 exprs -> expr : ['$1'].
-exprs -> expr exprs : ['$1' | '$2'].
+exprs -> expr ',' : ['$1'].
+exprs -> expr ',' exprs : ['$1' | '$3'].
 
 expr -> module : '$1'.
 expr -> integer : '$1'.

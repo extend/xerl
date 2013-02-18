@@ -30,6 +30,8 @@ Rules.
 	end}.
 {D}+ : {token, {integer, TokenLine, list_to_integer(TokenChars)}}.
 
+, : {token, {',', TokenLine}}.
+
 {WS}+ : skip_token.
 
 Erlang code.

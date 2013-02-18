@@ -1,6 +1,6 @@
 mod first_module
 begin
-end
+end,
 
 mod second_module
 begin
