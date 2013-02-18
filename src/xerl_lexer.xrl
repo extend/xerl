@@ -28,6 +28,7 @@ Rules.
 		true -> {Atom, TokenLine};
 		false -> {atom, TokenLine, Atom}
 	end}.
+{D}+ : {token, {integer, TokenLine, list_to_integer(TokenChars)}}.
 
 {WS}+ : skip_token.
 

@@ -18,7 +18,7 @@ Nonterminals
 exprs expr module.
 
 Terminals
-atom
+atom integer
 
 'begin' 'end' 'mod'.
 
@@ -28,6 +28,7 @@ exprs -> expr : ['$1'].
 exprs -> expr exprs : ['$1' | '$2'].
 
 expr -> module : '$1'.
+expr -> integer : '$1'.
 
 module -> 'mod' atom 'begin' 'end' :
 	{'mod', ?line('$1'), '$2', []}.

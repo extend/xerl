@@ -33,4 +33,7 @@ execute(Filename, [Expr = {mod, _, {atom, _, Name}, []}|Tail], Modules) ->
 	{ok, _, Beam} = compile:forms(Core,
 		[binary, from_core, return_errors, {source, Filename}]),
 	{module, Name} = code:load_binary(Name, Filename, Beam),
-	execute(Filename, Tail, [Name|Modules]).
+	execute(Filename, Tail, [Name|Modules]);
+execute(Filename, [{integer, _, Int}|Tail], Modules) ->
+	io:format("integer ~p~n", [Int]),
+	execute(Filename, Tail, Modules).
