@@ -16,24 +16,30 @@
 
 -export([compile/1]).
 
+-record(env, {
+	filename,
+	modules = []
+}).
+
 compile(Filename) ->
 	io:format("Compiling ~s...~n", [Filename]),
 	{ok, Src} = file:read_file(Filename),
 	{ok, Tokens, _} = xerl_lexer:string(binary_to_list(Src)),
 	{ok, Exprs} = xerl_parser:parse(Tokens),
-	execute(Filename, Exprs, []).
+	execute(Exprs, #env{filename=Filename}).
 
-execute(_, [], Modules) ->
+execute([], #env{modules=Modules}) ->
 	io:format("Done...~n"),
 	{ok, lists:reverse(Modules)};
-execute(Filename, [Expr = {mod, _, {atom, _, Name}, []}|Tail], Modules) ->
+execute([Expr = {mod, _, {atom, _, Name}, []}|Tail],
+		Env=#env{filename=Filename, modules=Modules}) ->
 	{ok, [Core]} = xerl_codegen:exprs([Expr]),
 	{ok, [{Name, []}]} = core_lint:module(Core),
 	io:format("~s~n", [core_pp:format(Core)]),
 	{ok, _, Beam} = compile:forms(Core,
 		[binary, from_core, return_errors, {source, Filename}]),
 	{module, Name} = code:load_binary(Name, Filename, Beam),
-	execute(Filename, Tail, [Name|Modules]);
-execute(Filename, [{integer, _, Int}|Tail], Modules) ->
+	execute(Tail, Env#env{modules=[Name|Modules]});
+execute([{integer, _, Int}|Tail], Env) ->
 	io:format("integer ~p~n", [Int]),
-	execute(Filename, Tail, Modules).
+	execute(Tail, Env).
