@@ -15,6 +15,7 @@
 -module(xerl_codegen).
 
 -export([exprs/1]).
+-export([intermediate_module/2]).
 
 exprs(Exprs) ->
 	exprs(Exprs, []).
@@ -23,13 +24,22 @@ exprs([], Acc) ->
 exprs([Expr|Tail], Acc) ->
 	exprs(Tail, [expr(Expr)|Acc]).
 
+intermediate_module(AtomName, Exprs) ->
+	Name = cerl:c_atom(AtomName),
+	{ok, [Exprs2]} = exprs(Exprs),
+	RunName = cerl:c_fname(run, 0),
+	Run = {RunName, cerl:c_fun([], Exprs2)},
+	{ok, cerl:c_module(Name, [RunName], [Run])}.
+
 %% Create the module Name with the functions module_info/{0,1}.
 expr({mod, _L, {atom, _, AtomName}, []}) ->
 	Name = cerl:c_atom(AtomName),
 	cerl:c_module(
 		Name,
 		[cerl:c_fname(module_info, 0), cerl:c_fname(module_info, 1)],
-		mod_info(Name)).
+		mod_info(Name));
+expr({integer, _L, Int}) ->
+	cerl:c_int(Int).
 
 mod_info(Name) ->
 	M = cerl:c_atom(erlang),

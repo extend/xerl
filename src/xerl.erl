@@ -26,20 +26,15 @@ compile(Filename) ->
 	{ok, Src} = file:read_file(Filename),
 	{ok, Tokens, _} = xerl_lexer:string(binary_to_list(Src)),
 	{ok, Exprs} = xerl_parser:parse(Tokens),
-	execute(Exprs, #env{filename=Filename}).
+	file_body(Exprs, #env{filename=Filename}).
 
-execute([], #env{modules=Modules}) ->
-	io:format("Done...~n"),
-	{ok, lists:reverse(Modules)};
-execute([Expr = {mod, _, {atom, _, Name}, []}|Tail],
-		Env=#env{filename=Filename, modules=Modules}) ->
-	{ok, [Core]} = xerl_codegen:exprs([Expr]),
+%% We create an intermediate module for running the expressions.
+file_body(Exprs, #env{filename=Filename}) ->
+	Name = '$xerl_intermediate',
+	{ok, Core} = xerl_codegen:intermediate_module(Name, Exprs),
 	{ok, [{Name, []}]} = core_lint:module(Core),
 	io:format("~s~n", [core_pp:format(Core)]),
 	{ok, _, Beam} = compile:forms(Core,
 		[binary, from_core, return_errors, {source, Filename}]),
 	{module, Name} = code:load_binary(Name, Filename, Beam),
-	execute(Tail, Env#env{modules=[Name|Modules]});
-execute([{integer, _, Int}|Tail], Env) ->
-	io:format("integer ~p~n", [Int]),
-	execute(Tail, Env).
+	Name:run().
