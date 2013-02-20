@@ -18,15 +18,19 @@
 -export([intermediate_module/2]).
 
 exprs(Exprs) ->
-	exprs(Exprs, []).
-exprs([], Acc) ->
-	{ok, lists:reverse(Acc)};
-exprs([Expr|Tail], Acc) ->
-	exprs(Tail, [expr(Expr)|Acc]).
+	Core = comp_body(Exprs),
+	{ok, Core}.
+
+comp_body([Expr]) ->
+	expr(Expr);
+comp_body([Expr|Exprs]) ->
+	Arg = expr(Expr),
+	Body = comp_body(Exprs),
+	cerl:c_seq(Arg, Body).
 
 intermediate_module(AtomName, Exprs) ->
 	Name = cerl:c_atom(AtomName),
-	{ok, [Exprs2]} = exprs(Exprs),
+	{ok, Exprs2} = exprs(Exprs),
 	RunName = cerl:c_fname(run, 0),
 	Run = {RunName, cerl:c_fun([], Exprs2)},
 	{ok, cerl:c_module(Name, [RunName], [Run])}.
